@@ -16,22 +16,22 @@ import { fetchSummaries } from './api';
 import type { RepoSummary } from './types';
 
 const STATUS_COLORS = {
-  passed: '#34d399',
-  failed: '#f87171',
-  broken: '#fbbf24',
-  skipped: '#64748b',
+  passed: '#3ddc97',
+  failed: '#f2706d',
+  broken: '#f0a531',
+  skipped: '#6b7280',
 };
 
-const LINE_COLORS = ['#818cf8', '#22d3ee', '#f472b6', '#a3e635', '#fb923c'];
+const LINE_COLORS = ['#d4af37', '#7dd3fc', '#f472b6', '#a3e635', '#fb923c'];
 
-const AXIS_TICK = { fill: '#8b93a7', fontSize: 12 };
+const AXIS_TICK = { fill: '#968f81', fontSize: 12 };
 const GRID_STROKE = 'rgba(255,255,255,0.06)';
 const TOOLTIP_STYLE = {
-  background: '#171d2b',
-  border: '1px solid rgba(255,255,255,0.1)',
+  background: '#191c25',
+  border: '1px solid rgba(212,175,55,0.25)',
   borderRadius: 12,
   fontSize: 13,
-  color: '#e6e9f0',
+  color: '#ebe6da',
 };
 
 function passRate(s: RepoSummary): number {
@@ -52,6 +52,12 @@ function rateColor(rate: number): string {
   if (rate >= 90) return STATUS_COLORS.passed;
   if (rate >= 70) return STATUS_COLORS.broken;
   return STATUS_COLORS.failed;
+}
+
+function verdictOf(rate: number): { label: string; cls: string } {
+  if (rate >= 90) return { label: 'Pass', cls: 'pass' };
+  if (rate >= 70) return { label: 'Review', cls: 'review' };
+  return { label: 'Fail', cls: 'fail' };
 }
 
 function App() {
@@ -118,10 +124,10 @@ function App() {
     <div className="app">
       <header className="header">
         <div className="brand">
-          <div className="brand-mark">◈</div>
+          <div className="brand-mark">⚖</div>
           <div>
             <h1>QA Portfolio Dashboard</h1>
-            <p>Executive snapshot across test repos — latest run per repo</p>
+            <p>Cross-stack CI evidence — every run on the record</p>
           </div>
         </div>
         <div className="header-right">
@@ -175,6 +181,9 @@ function App() {
                 <div className="card" key={s.repo}>
                   <div className="card-top">
                     <div className="card-repo">{s.repo}</div>
+                    <span className={`verdict ${verdictOf(rate).cls}`}>
+                      Verdict: {verdictOf(rate).label}
+                    </span>
                     <div className="card-rate" style={{ color: rateColor(rate) }}>
                       {rate}%
                     </div>
@@ -268,6 +277,14 @@ function App() {
           </section>
         </>
       )}
+
+      <footer className="foot">
+        Test architecture standards enforced by{' '}
+        <a href="https://github.com/dsolisp/gavel" target="_blank" rel="noreferrer">
+          Gavel
+        </a>{' '}
+        — my open-source QA discipline engine for AI coding agents.
+      </footer>
     </div>
   );
 }
