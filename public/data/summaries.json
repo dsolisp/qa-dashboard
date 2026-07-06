@@ -1,0 +1,14 @@
+[
+  {
+    "repo": "SmokeRepo",
+    "run_id": "12345",
+    "timestamp": "2026-05-05T00:00:00Z",
+    "suite": "nightly",
+    "total": 2,
+    "passed": 2,
+    "failed": 0,
+    "broken": 0,
+    "skipped": 0,
+    "duration_ms": 42
+  }
+]
