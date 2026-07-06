@@ -124,12 +124,17 @@ function App() {
             <p>Executive snapshot across test repos — latest run per repo</p>
           </div>
         </div>
-        {latestTimestamp && (
-          <div className="updated-pill">
-            <span className="pulse-dot" />
-            Updated {timeAgo(latestTimestamp)}
-          </div>
-        )}
+        <div className="header-right">
+          <a className="back-link" href="https://dsolisp.is-a.dev/">
+            ← Portfolio
+          </a>
+          {latestTimestamp && (
+            <div className="updated-pill">
+              <span className="pulse-dot" />
+              Updated {timeAgo(latestTimestamp)}
+            </div>
+          )}
+        </div>
       </header>
 
       {isLoading && <div className="state">Loading metrics…</div>}
