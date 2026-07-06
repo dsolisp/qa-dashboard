@@ -20,9 +20,6 @@ jobs:
 
       - name: Install pnpm
         uses: pnpm/action-setup@v5
-        with:
-          version: 9
-          run_install: false
 
       - name: Use Node.js 24.x
         uses: actions/setup-node@v5
