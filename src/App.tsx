@@ -14,6 +14,8 @@ import {
 } from 'recharts';
 import { fetchSummaries } from './api';
 import type { RepoSummary } from './types';
+import { useTheme } from './useTheme';
+import ThemeToggle from './ThemeToggle';
 
 const STATUS_COLORS = {
   passed: '#3ddc97',
@@ -29,16 +31,6 @@ const REPO_LABELS: Record<string, string> = {
   JavaSeleniumProject: 'Java Selenium',
   PlaywrightProject: 'Playwright',
   PythonSeleniumProject: 'Python Selenium',
-};
-
-const AXIS_TICK = { fill: '#968f81', fontSize: 12 };
-const GRID_STROKE = 'rgba(255,255,255,0.06)';
-const TOOLTIP_STYLE = {
-  background: '#191c25',
-  border: '1px solid rgba(212,175,55,0.25)',
-  borderRadius: 12,
-  fontSize: 13,
-  color: '#ebe6da',
 };
 
 function passRate(s: RepoSummary): number {
@@ -91,6 +83,19 @@ function verdictOf(rate: number): { label: string; cls: string } {
 }
 
 function App() {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
+  const AXIS_TICK = { fill: isDark ? '#968f81' : '#6b6459', fontSize: 12 };
+  const GRID_STROKE = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+  const TOOLTIP_STYLE = {
+    background: isDark ? '#191c25' : '#ffffff',
+    border: `1px solid ${isDark ? 'rgba(212,175,55,0.25)' : 'rgba(154,116,32,0.25)'}`,
+    borderRadius: 12,
+    fontSize: 13,
+    color: isDark ? '#ebe6da' : '#1a1714',
+  };
+
   const { data, isLoading, error } = useQuery({
     queryKey: ['summaries'],
     queryFn: fetchSummaries,
@@ -171,6 +176,7 @@ function App() {
 
   return (
     <div className="app">
+      <ThemeToggle />
       <header className="header">
         <div className="brand">
           <div className="brand-mark">⚖</div>
@@ -180,7 +186,7 @@ function App() {
           </div>
         </div>
         <div className="header-right">
-          <a className="back-link" href="https://dsolisp.github.io/portfolio/">
+          <a className="back-link" href="https://dsolisp.github.io">
             ← Portfolio
           </a>
           {latestTimestamp && (
