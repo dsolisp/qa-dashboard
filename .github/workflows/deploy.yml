@@ -30,6 +30,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Restore latest summaries from live site
+        run: |
+          curl -fsSL "https://dsolisp.github.io/qa-dashboard/data/summaries.json" \
+            -o public/data/summaries.json \
+            || echo "Could not fetch live summaries, using committed fallback"
+
       - name: Build site
         run: pnpm run build
 
