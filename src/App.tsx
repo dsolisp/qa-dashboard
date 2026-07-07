@@ -24,6 +24,13 @@ const STATUS_COLORS = {
 
 const LINE_COLORS = ['#d4af37', '#7dd3fc', '#f472b6', '#a3e635', '#fb923c'];
 
+const REPO_LABELS: Record<string, string> = {
+  CypressProject: 'Cypress',
+  JavaSeleniumProject: 'Java Selenium',
+  PlaywrightProject: 'Playwright',
+  PythonSeleniumProject: 'Python Selenium',
+};
+
 const AXIS_TICK = { fill: '#968f81', fontSize: 12 };
 const GRID_STROKE = 'rgba(255,255,255,0.06)';
 const TOOLTIP_STYLE = {
@@ -36,6 +43,29 @@ const TOOLTIP_STYLE = {
 
 function passRate(s: RepoSummary): number {
   return s.total > 0 ? Math.round((s.passed / s.total) * 100) : 0;
+}
+
+function repoLabel(repo: string): string {
+  return REPO_LABELS[repo] ?? repo.replace(/Project$/, '');
+}
+
+function dayKey(iso: string): string {
+  return iso.slice(0, 10);
+}
+
+function dayLabel(day: string): string {
+  return new Date(`${day}T00:00:00Z`).toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+  });
+}
+
+function shouldUseAsLatest(candidate: RepoSummary, current: RepoSummary): boolean {
+  const candidateHasTests = candidate.total > 0;
+  const currentHasTests = current.total > 0;
+
+  if (candidateHasTests !== currentHasTests) return candidateHasTests;
+  return new Date(candidate.timestamp).getTime() > new Date(current.timestamp).getTime();
 }
 
 function timeAgo(iso: string): string {
@@ -73,7 +103,7 @@ function App() {
     const map = new Map<string, RepoSummary>();
     for (const s of summaries) {
       const prev = map.get(s.repo);
-      if (!prev || new Date(s.timestamp).getTime() > new Date(prev.timestamp).getTime()) {
+      if (!prev || shouldUseAsLatest(s, prev)) {
         map.set(s.repo, s);
       }
     }
@@ -102,23 +132,42 @@ function App() {
   );
 
   const chartData = latestByRepo.map((s) => ({
-    repo: s.repo,
+    repo: repoLabel(s.repo),
     passed: s.passed,
     failed: s.failed,
     broken: s.broken,
     skipped: s.skipped,
   }));
 
-  const trendSeries = useMemo(() => {
-    const byRepo = new Map<string, { t: number; rate: number }[]>();
+  const trendData = useMemo(() => {
+    const byDayRepo = new Map<string, Map<string, RepoSummary>>();
+
     for (const s of summaries) {
-      const t = new Date(s.timestamp).getTime();
-      if (!byRepo.has(s.repo)) byRepo.set(s.repo, []);
-      byRepo.get(s.repo)!.push({ t, rate: passRate(s) });
+      if (s.total <= 0) continue;
+
+      const day = dayKey(s.timestamp);
+      if (!byDayRepo.has(day)) byDayRepo.set(day, new Map());
+
+      const repoRuns = byDayRepo.get(day)!;
+      const prev = repoRuns.get(s.repo);
+      if (!prev || new Date(s.timestamp).getTime() > new Date(prev.timestamp).getTime()) {
+        repoRuns.set(s.repo, s);
+      }
     }
-    for (const points of byRepo.values()) points.sort((a, b) => a.t - b.t);
-    return Array.from(byRepo.entries()).sort(([a], [b]) => a.localeCompare(b));
+
+    return Array.from(byDayRepo.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([day, repoRuns]) => {
+        const point: Record<string, string | number> = { day, label: dayLabel(day) };
+        for (const [repo, summary] of repoRuns) point[repo] = passRate(summary);
+        return point;
+      });
   }, [summaries]);
+
+  const trendRepos = useMemo(
+    () => latestByRepo.filter((s) => s.total > 0).map((s) => s.repo),
+    [latestByRepo],
+  );
 
   return (
     <div className="app">
@@ -216,14 +265,14 @@ function App() {
           <section className="charts">
             <div className="panel">
               <h2>Latest run breakdown</h2>
-              <div style={{ width: '100%', height: 300 }}>
+              <div className="chart-frame">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData} barSize={48}>
+                  <BarChart data={chartData} barSize={42} margin={{ top: 8, right: 10, left: -8, bottom: 8 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} vertical={false} />
-                    <XAxis dataKey="repo" tick={AXIS_TICK} axisLine={false} tickLine={false} />
+                    <XAxis dataKey="repo" tick={AXIS_TICK} axisLine={false} tickLine={false} interval={0} />
                     <YAxis tick={AXIS_TICK} axisLine={false} tickLine={false} />
                     <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
-                    <Legend wrapperStyle={{ fontSize: 13 }} />
+                    <Legend wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
                     <Bar dataKey="passed" stackId="a" fill={STATUS_COLORS.passed} radius={[0, 0, 0, 0]} />
                     <Bar dataKey="failed" stackId="a" fill={STATUS_COLORS.failed} />
                     <Bar dataKey="broken" stackId="a" fill={STATUS_COLORS.broken} />
@@ -234,40 +283,35 @@ function App() {
             </div>
             <div className="panel">
               <h2>Pass rate trend</h2>
-              <div style={{ width: '100%', height: 300 }}>
+              <div className="chart-frame">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart>
+                  <LineChart data={trendData} margin={{ top: 8, right: 18, left: -8, bottom: 12 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} vertical={false} />
                     <XAxis
-                      dataKey="t"
-                      type="number"
-                      domain={['dataMin', 'dataMax']}
-                      scale="time"
+                      dataKey="label"
                       tick={AXIS_TICK}
                       axisLine={false}
                       tickLine={false}
-                      tickFormatter={(t: number) =>
-                        new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-                      }
+                      minTickGap={26}
                     />
                     <YAxis domain={[0, 100]} unit="%" tick={AXIS_TICK} axisLine={false} tickLine={false} />
                     <Tooltip
                       contentStyle={TOOLTIP_STYLE}
-                      labelFormatter={(t) => new Date(Number(t)).toLocaleString()}
-                      formatter={(value) => [`${value}%`, 'pass rate']}
+                      labelFormatter={(_, payload) => String(payload?.[0]?.payload?.day ?? '')}
+                      formatter={(value, name) => [`${value}%`, repoLabel(String(name))]}
                     />
-                    <Legend wrapperStyle={{ fontSize: 13 }} />
-                    {trendSeries.map(([repo, points], i) => (
+                    <Legend wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
+                    {trendRepos.map((repo, i) => (
                       <Line
                         key={repo}
-                        data={points}
-                        dataKey="rate"
-                        name={repo}
+                        dataKey={repo}
+                        name={repoLabel(repo)}
                         type="monotone"
                         stroke={LINE_COLORS[i % LINE_COLORS.length]}
                         strokeWidth={2}
-                        dot={{ r: 3 }}
+                        dot={{ r: 2 }}
                         activeDot={{ r: 5 }}
+                        connectNulls={false}
                       />
                     ))}
                   </LineChart>
