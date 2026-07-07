@@ -131,7 +131,7 @@ function App() {
           </div>
         </div>
         <div className="header-right">
-          <a className="back-link" href="https://dsolisp.is-a.dev/">
+          <a className="back-link" href="https://dsolisp.github.io/">
             ← Portfolio
           </a>
           {latestTimestamp && (
