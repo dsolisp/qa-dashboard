@@ -27,6 +27,7 @@ const STATUS_COLORS = {
 const LINE_COLORS = ['#d4af37', '#7dd3fc', '#f472b6', '#a3e635', '#fb923c'];
 
 const REPO_LABELS: Record<string, string> = {
+  CSharpSeleniumProject: 'C# Selenium',
   CypressProject: 'Cypress',
   JavaSeleniumProject: 'Java Selenium',
   PlaywrightProject: 'Playwright',
@@ -45,11 +46,12 @@ function dayKey(iso: string): string {
   return iso.slice(0, 10);
 }
 
-function dayLabel(day: string): string {
-  return new Date(`${day}T00:00:00Z`).toLocaleDateString(undefined, {
-    month: 'short',
-    day: 'numeric',
-  });
+function dayTs(day: string): number {
+  return new Date(`${day}T00:00:00Z`).getTime();
+}
+
+function fmtTs(ts: number): string {
+  return new Date(ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
 function shouldUseAsLatest(candidate: RepoSummary, current: RepoSummary): boolean {
@@ -160,10 +162,16 @@ function App() {
       }
     }
 
-    return Array.from(byDayRepo.entries())
-      .sort(([a], [b]) => a.localeCompare(b))
+    const sorted = Array.from(byDayRepo.entries()).sort(([a], [b]) => a.localeCompare(b));
+
+    // Keep only the last 30 days to discard stale seed data
+    const latestTs = sorted.length > 0 ? dayTs(sorted[sorted.length - 1][0]) : 0;
+    const cutoff = latestTs - 30 * 24 * 60 * 60 * 1000;
+
+    return sorted
+      .filter(([day]) => dayTs(day) >= cutoff)
       .map(([day, repoRuns]) => {
-        const point: Record<string, string | number> = { day, label: dayLabel(day) };
+        const point: Record<string, string | number> = { ts: dayTs(day), day };
         for (const [repo, summary] of repoRuns) point[repo] = passRate(summary);
         return point;
       });
@@ -294,16 +302,20 @@ function App() {
                   <LineChart data={trendData} margin={{ top: 8, right: 18, left: -8, bottom: 12 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} vertical={false} />
                     <XAxis
-                      dataKey="label"
+                      dataKey="ts"
+                      type="number"
+                      scale="time"
+                      domain={['auto', 'auto']}
                       tick={AXIS_TICK}
                       axisLine={false}
                       tickLine={false}
-                      minTickGap={26}
+                      minTickGap={40}
+                      tickFormatter={(ts: number) => fmtTs(ts)}
                     />
                     <YAxis domain={[0, 100]} unit="%" tick={AXIS_TICK} axisLine={false} tickLine={false} />
                     <Tooltip
                       contentStyle={TOOLTIP_STYLE}
-                      labelFormatter={(_, payload) => String(payload?.[0]?.payload?.day ?? '')}
+                      labelFormatter={(ts) => fmtTs(Number(ts))}
                       formatter={(value, name) => [`${value}%`, repoLabel(String(name))]}
                     />
                     <Legend wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
@@ -317,7 +329,7 @@ function App() {
                         strokeWidth={2}
                         dot={{ r: 2 }}
                         activeDot={{ r: 5 }}
-                        connectNulls={false}
+                        connectNulls={true}
                       />
                     ))}
                   </LineChart>
