@@ -1,21 +1,20 @@
 :root {
-  --bg: #0b0c10;
-  --panel: #13151c;
-  --panel-2: #191c25;
-  --border: rgba(255, 255, 255, 0.07);
-  --text: #ebe6da;
-  --muted: #968f81;
-  --gold: #d4af37;
-  --accent: #d4af37;
+  --bg: #06080d;
+  --panel: #12161f;
+  --panel-2: #181d28;
+  --border: rgba(255, 255, 255, 0.08);
+  --text: #e8eaed;
+  --muted: #8b95a8;
+  --gold: #3dffc7;
+  --accent: #3dffc7;
   --pass: #3ddc97;
   --fail: #f2706d;
   --broken: #f0a531;
   --skip: #6b7280;
   --shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 
-  --sans:
-    'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --serif: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --sans: 'Figtree', sans-serif;
+  --display: 'Syne', sans-serif;
   --mono: ui-monospace, 'SF Mono', Consolas, monospace;
 
   font: 15px/1.5 var(--sans);
@@ -30,15 +29,15 @@
 
 /* === Light theme === */
 [data-theme="light"] {
-  --bg: #faf7f2;
+  --bg: #eef2f6;
   --panel: #ffffff;
-  --panel-2: #f5f0e8;
+  --panel-2: #e4eaf1;
   --border: rgba(0, 0, 0, 0.10);
-  --text: #1a1714;
-  --muted: #6b6459;
-  --gold: #9a7420;
-  --accent: #9a7420;
-  --shadow: 0 8px 24px rgba(0, 0, 0, 0.10);
+  --text: #12151c;
+  --muted: #5a6578;
+  --gold: #0f9f7a;
+  --accent: #0f9f7a;
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
   color-scheme: light;
   color: var(--text);
   background: var(--bg);
@@ -46,8 +45,8 @@
 
 [data-theme="light"] body {
   background:
-    radial-gradient(900px 420px at 15% -10%, rgba(212, 175, 55, 0.06), transparent 60%),
-    radial-gradient(800px 400px at 90% -20%, rgba(150, 110, 30, 0.05), transparent 60%),
+    radial-gradient(900px 420px at 15% -10%, rgba(15, 159, 122, 0.08), transparent 60%),
+    radial-gradient(800px 400px at 90% -20%, rgba(61, 255, 199, 0.06), transparent 60%),
     var(--bg);
 }
 
@@ -57,14 +56,18 @@
   top: 1rem;
   right: 1rem;
   z-index: 9999;
-  width: 2.6rem;
-  height: 2.6rem;
-  border-radius: 50%;
+  min-width: 3.4rem;
+  height: 2.2rem;
+  padding: 0 0.75rem;
+  border-radius: 999px;
   border: 1px solid var(--border);
   background: var(--panel);
   color: var(--text);
   cursor: pointer;
-  font-size: 1.15rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -72,15 +75,15 @@
   transition: border-color 0.18s ease, background 0.18s ease;
 }
 .theme-toggle:hover {
-  border-color: var(--gold);
+  border-color: var(--accent);
 }
 
 body {
   margin: 0;
   min-height: 100svh;
   background:
-    radial-gradient(900px 420px at 15% -10%, rgba(212, 175, 55, 0.09), transparent 60%),
-    radial-gradient(800px 400px at 90% -20%, rgba(150, 110, 30, 0.07), transparent 60%),
+    radial-gradient(900px 420px at 15% -10%, rgba(61, 255, 199, 0.08), transparent 60%),
+    radial-gradient(800px 400px at 90% -20%, rgba(15, 159, 122, 0.06), transparent 60%),
     var(--bg);
 }
 
@@ -112,10 +115,57 @@ body {
   border-radius: 12px;
   display: grid;
   place-items: center;
-  font-size: 22px;
-  color: #14161c;
-  background: linear-gradient(135deg, #e8ca6b, #9a7420);
-  box-shadow: 0 4px 14px rgba(212, 175, 55, 0.35);
+  font-family: var(--display);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #06080d;
+  background: linear-gradient(135deg, #3dffc7, #0f9f7a);
+  box-shadow: 0 4px 14px rgba(61, 255, 199, 0.3);
+}
+
+.brand h1 {
+  font-family: var(--display);
+  letter-spacing: -0.02em;
+}
+
+.freshness-banner {
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(61, 255, 199, 0.28);
+  background: rgba(61, 255, 199, 0.08);
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.freshness-banner.is-warn {
+  border-color: rgba(240, 165, 49, 0.4);
+  background: rgba(240, 165, 49, 0.1);
+}
+
+.kpi-hint {
+  margin-top: 4px;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.card.is-stale {
+  border-color: rgba(240, 165, 49, 0.35);
+}
+
+.stale-pill {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #f0a531;
+  background: rgba(240, 165, 49, 0.15);
+  border: 1px solid rgba(240, 165, 49, 0.35);
 }
 
 .brand h1 {
@@ -387,7 +437,13 @@ body {
 
 .chart-frame {
   width: 100%;
+  min-width: 0;
   height: 320px;
+  min-height: 320px;
+}
+
+.chart-frame .recharts-responsive-container {
+  min-width: 0 !important;
 }
 
 .recharts-default-legend {
@@ -424,7 +480,7 @@ body {
 }
 
 .foot a {
-  color: var(--gold);
+  color: var(--accent);
   text-decoration: none;
 }
 
